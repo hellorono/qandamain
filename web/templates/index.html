@@ -19,6 +19,12 @@
    <div class="col-md-10 col-lg-8 col-xl-7">
     <!-- Post preview-->
     <div class="post-preview">
+
+        {%if q.image%}
+        <div>
+            <img src="{{q.image.url}}" alt="" class="w-100">
+        </div>
+        {%endif%}
         <a href="post.html">
             <h2 class="post-title">{{q.title}}</h2>
             <h5 class="post-subtitle">{{q.description}}</h3>
@@ -29,15 +35,23 @@
             on {{q.created_date}}
         </p>
     </div>
+
+        <div>
+            <form action="{%url 'add-answer' q.id %}" method="post">
+                {%csrf_token%}
+                <input type="text" placeholder="enter your answers" name="answer" class="form-control">
+                <button type="submit" class="btn btn-outline-info mt-2 btn-sm">add</button>
+            </form>
+        </div>
+
     <h5 class="post-title"> Answers </h5>
     {%for ans in q.question_answers%}
-    <div>
+    <div class="border rounded-pill p-3 border-success mt-2">
         Answer={{ans}}
         User={{ans.user}}
         Date={{ans.created_date}}
         Votecount={{ans.votecount}}
-
-        
+        <a href="{%url 'add-upvote' ans.id%}" class="btn btn-warning btn-sm">upvote</a>
 
     </div>
     {%endfor%}

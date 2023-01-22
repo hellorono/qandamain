@@ -4,9 +4,23 @@ from django.shortcuts import render,redirect
 from django.views.generic import CreateView,FormView,TemplateView,ListView
 from .forms import LoginForm,UserRegistrationForm,QuestionForm
 from django.urls import reverse_lazy
-from django.contrib.auth import authenticate,login
+from django.contrib.auth import authenticate,login,logout
 from django.contrib import messages
-from api.models import Questions
+from api.models import Questions,Answers
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+
+
+def signin_required(fn):
+    def wrapper(request,*args,**kw):
+        if not request.user.is_authenticated:
+            messages.error(request,"invalid session")
+            return redirect("signin")
+        else:
+            return fn(request,*args,**kw)
+    return wrapper
+
+decs=[never_cache,signin_required]
 
 
 class SignUpView(CreateView):
@@ -29,6 +43,7 @@ class SignInView(FormView):
             else:
                 return render(request,self.template_name,{"form":form})
 
+@method_decorator(decs,name="dispatch")
 class IndexView(CreateView,ListView):
     template_name="index.html"
     form_class=QuestionForm
@@ -45,6 +60,25 @@ class IndexView(CreateView,ListView):
     def get_queryset(self):
         return Questions.objects.exclude(user=self.request.user).order_by('-created_date')
     
+decs
+def add_answer(request,*args,**kwargs):
+    id=kwargs.get("id")
+    ques=Questions.objects.get(id=id)
+    answer=request.POST.get("answer")
+    Answers.objects.create(question=ques,answer=answer,user=request.user)
+    messages.success(request,"your answer posted successfully")
+    return redirect("index")
+
+decs
+def answers_upvote_view(request,*args,**kwargs):
+    id=kwargs.get("id")
+    ans=Answers.objects.get(id=id)
+    ans.upvote.add(request.user)
+    return redirect("index")
+decs
+def signout_view(request,*args,**kw):
+    logout(request)
+    return redirect("signin")
 
 
 
